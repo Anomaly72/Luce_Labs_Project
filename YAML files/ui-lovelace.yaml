@@ -1,0 +1,49 @@
+title: Enclosure Climate Control
+views:
+  - title: Controls & Diagnostics
+    icon: mdi:flower
+    cards:
+      # --- STATUS OVERVIEW ---
+      - type: entities
+        title: System Status
+        show_header_toggle: false
+        entities:
+          - entity: input_boolean.exhaust_fan_state
+            name: Exhaust Fan Relay
+          - entity: sensor.filtered_temperature
+            name: Filtered Temperature
+          - entity: sensor.filtered_humidity
+            name: Filtered Humidity
+
+      # --- LIVE HISTORY GRAPH ---
+      - type: history-graph
+        title: Environmental Metrics (Last 10 Min)
+        hours_to_show: 0.16
+        refresh_interval: 1
+        entities:
+          - entity: sensor.filtered_temperature
+            name: Temp (°C)
+          - entity: sensor.filtered_humidity
+            name: Humidity (%)
+          - entity: input_boolean.exhaust_fan_state
+            name: Fan On/Off
+
+      # --- TUNING SLIDERS ---
+      - type: entities
+        title: Parameter Tuning
+        show_header_toggle: false
+        entities:
+          - entity: input_number.target_temp
+          - entity: input_number.temp_buffer
+          - entity: input_number.target_humidity
+          - entity: input_number.humidity_buffer
+
+      # --- SIMULATION INPUT CONTROLS ---
+      - type: entities
+        title: Hardware Simulator (Mock Sensors)
+        show_header_toggle: false
+        entities:
+          - entity: input_number.simulated_raw_temp
+            name: Inject Raw Temp
+          - entity: input_number.simulated_raw_humidity
+            name: Inject Raw Humidity

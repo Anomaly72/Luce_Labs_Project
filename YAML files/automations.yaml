@@ -1,0 +1,58 @@
+- alias: "Plant Enclosure Climate Controller"
+  id: plant_enclosure_climate_controller
+  description: "Controls exhaust fan based on temperature and humidity thresholds with anti-short-cycling delays."
+  trigger:
+    - platform: time_pattern
+      seconds: "/1"
+  action:
+    - choose:
+        # ======================================================================
+        # CONDITION 1: TURN FAN OFF
+        # Requirement: Fan is ON AND (Temp <= Target - Buffer AND Humidity <= Target - Buffer)
+        # Delay: Fan must have been ON for at least 500 ms (0.5s)
+        # ======================================================================
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.exhaust_fan_state
+              state: "on"
+              for:
+                milliseconds: 500
+            - condition: template
+              value_template: >-
+                {% set temp = states('sensor.filtered_temperature') | float(0) %}
+                {% set hum = states('sensor.filtered_humidity') | float(0) %}
+                {% set t_target = states('input_number.target_temp') | float(0) %}
+                {% set h_target = states('input_number.target_humidity') | float(0) %}
+                {% set t_buf = states('input_number.temp_buffer') | float(0) %}
+                {% set h_buf = states('input_number.humidity_buffer') | float(0) %}
+                
+                {{ temp <= (t_target - t_buf) and hum <= (h_target - h_buf) }}
+          sequence:
+            - service: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.exhaust_fan_state
+
+        # ======================================================================
+        # CONDITION 2: TURN FAN ON
+        # Requirement: Fan is OFF AND (Temp > Target OR Humidity > Target)
+        # Delay: Fan must have been OFF for at least 500 ms (0.5s)
+        # ======================================================================
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.exhaust_fan_state
+              state: "off"
+              for:
+                milliseconds: 500
+            - condition: template
+              value_template: >-
+                {% set temp = states('sensor.filtered_temperature') | float(0) %}
+                {% set hum = states('sensor.filtered_humidity') | float(0) %}
+                {% set t_target = states('input_number.target_temp') | float(0) %}
+                {% set h_target = states('input_number.target_humidity') | float(0) %}
+                
+                {{ temp > t_target or hum > h_target }}
+          sequence:
+            - service: input_boolean.turn_on
+              target:
+                entity_id: input_boolean.exhaust_fan_state
+  mode: single
